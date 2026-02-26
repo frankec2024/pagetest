@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Propiedad Exclusiva - Dossier Interactivo de Lujo">
+    <title>VILLA ODYSSEY | Luxury Estate</title>
+
+    <!-- Tailwind & FontAwesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@200;300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- html2pdf.js Library para generar el PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'luxury-black': '#050505',
+                        'luxury-gold': '#C5A059',
+                        'luxury-gold-dark': '#8E6E36',
+                        'luxury-grey': '#1A1A1A',
+                        'luxury-light': '#F8F8F8',
+                    },
+                    fontFamily: {
+                        serif: ['Cinzel', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --gold: #C5A059;
+            --black: #050505;
+        }
+
+        html {
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
+            height: 100vh;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--black);
+            color: #E5E5E5;
+            min-height: 100vh;
+        }
+
+        .snap-section {
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            width: 100%;
+            position: relative;
+        }
+
+        .custom-cursor {
+            width: 30px;
+            height: 30px;
+            border: 1px solid var(--gold);
+            border-radius: 50%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate3d(-50%, -50%, 0);
+            transition: width 0.3s, height 0.3s, background 0.3s;
+            mix-blend-mode: difference;
+        }
+
+        .glass-card {
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(197, 160, 89, 0.15);
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hero-video-overlay {
+            background: linear-gradient(180deg, rgba(5, 5, 5, 0.3) 0%, rgba(5, 5, 5, 0.6) 50%, var(--black) 100%);
+        }
+
+        /* Spatial Buttons */
+        .spatial-btn {
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (min-width: 1024px) {
+            .spatial-btn {
+                color: #666;
+                text-align: left;
+                padding-left: 0;
+                border: none;
+                background: none;
+                width: 100%;
+                font-size: 24px;
+                font-family: 'Cinzel', serif;
+                letter-spacing: 0.1em;
+            }
+
+            .spatial-btn:hover {
+                color: var(--gold);
+            }
+
+            .spatial-btn.active {
+                color: white;
+                padding-left: 30px;
+            }
+
+            .spatial-btn.active::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 50%;
+                width: 20px;
+                height: 1px;
+                background: var(--gold);
+                transform: translateY(-50%);
+            }
+        }
+
+        @media (max-width: 1023px) {
+            .spatial-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                padding: 16px 8px;
+                border-radius: 4px;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+                color: rgba(255, 255, 255, 0.5);
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.15em;
+                text-align: center;
+                font-weight: 500;
+            }
+
+            .spatial-btn.active {
+                background: linear-gradient(135deg, #C5A059 0%, #8E6E36 100%);
+                color: black;
+                border-color: transparent;
+                font-weight: 700;
+                box-shadow: 0 4px 20px rgba(197, 160, 89, 0.3);
+                transform: scale(1.02);
+            }
+
+            #narrative-menu>button:last-child:nth-child(odd) {
+                grid-column: span 2;
+                background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            }
+
+            #narrative-menu>button:last-child:nth-child(odd).active {
+                background: linear-gradient(135deg, #C5A059 0%, #8E6E36 100%);
+            }
+        }
+
+        .location-card {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #111;
+        }
+
+        .location-bg {
+            transition: transform 0.8s ease;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.4;
+            filter: grayscale(100%);
+        }
+
+        .location-card:hover .location-bg {
+            transform: scale(1.1);
+            opacity: 0.6;
+            filter: grayscale(0%);
+        }
+
+        .location-card:hover {
+            border-color: var(--gold);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased overflow-x-hidden selection:bg-luxury-gold selection:text-black">
+
+    <div class="custom-cursor hidden md:block" id="cursor"></div>
+
+    <!-- Navegación Superior con Menú Hamburguesa para Móviles -->
+    <nav class="fixed top-0 w-full z-[100] px-6 lg:px-10 py-5 lg:py-8 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent pointer-events-none"
+        id="main-nav">
+        <div class="pointer-events-auto text-lg lg:text-2xl font-serif tracking-[0.2em] text-white">VILLA<span
+                class="text-luxury-gold">.</span>ODYSSEY</div>
+
+        <!-- Enlaces Escritorio -->
+        <div class="hidden lg:flex gap-12 text-[10px] uppercase tracking-[0.2em] font-medium pointer-events-auto">
+            <a href="#propiedad" class="hover:text-luxury-gold transition-colors py-2">La Villa</a>
+            <a href="#galeria" class="hover:text-luxury-gold transition-colors py-2">Espacios</a>
+            <a href="#planos" class="hover:text-luxury-gold transition-colors py-2">Planos</a>
+            <a href="#ubicacion" class="hover:text-luxury-gold transition-colors py-2">Entorno</a>
+            <a href="#contacto" class="hover:text-luxury-gold transition-colors py-2">Contacto</a>
+        </div>
+
+        <!-- Controles Móvil -->
+        <div class="lg:hidden flex items-center gap-4 pointer-events-auto">
+            <span class="text-[10px] tracking-[0.2em] text-luxury-gold uppercase font-semibold">Marbella</span>
+            <button id="hamburger-btn" class="text-white hover:text-luxury-gold transition-colors p-2">
+                <i class="fa-solid fa-bars text-2xl"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Overlay de Menú Móvil -->
+    <div id="mobile-menu" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[200] flex flex-col items-center justify-center gap-8 opacity-0 pointer-events-none transition-all duration-500">
+        <button id="close-menu-btn" class="absolute top-6 right-6 text-white hover:text-luxury-gold transition-colors p-4">
+            <i class="fa-solid fa-xmark text-3xl"></i>
+        </button>
+        
+        <div class="flex flex-col items-center gap-8 w-full px-6">
+            <span class="text-luxury-gold text-[10px] tracking-[0.4em] uppercase font-bold mb-4">Menú de Navegación</span>
+            <a href="#propiedad" class="mobile-link text-white text-2xl uppercase tracking-widest font-serif hover:text-luxury-gold transition-colors">La Villa</a>
+            <a href="#galeria" class="mobile-link text-white text-2xl uppercase tracking-widest font-serif hover:text-luxury-gold transition-colors">Espacios</a>
+            <a href="#planos" class="mobile-link text-white text-2xl uppercase tracking-widest font-serif hover:text-luxury-gold transition-colors">Planos</a>
+            <a href="#ubicacion" class="mobile-link text-white text-2xl uppercase tracking-widest font-serif hover:text-luxury-gold transition-colors">Entorno</a>
+            <a href="#contacto" class="mobile-link text-white text-2xl uppercase tracking-widest font-serif hover:text-luxury-gold transition-colors">Contacto</a>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <header id="hero" class="snap-section relative h-screen flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img src="assets/hero.jpg"
+                alt="Luxury Villa Hero"
+                class="w-full h-full object-cover opacity-60 scale-105 animate-[zoom-out_25s_infinite_linear]"
+                id="hero-img">
+            <div class="absolute inset-0 hero-video-overlay"></div>
+        </div>
+
+        <div class="relative z-10 text-center px-4 w-full max-w-5xl mx-auto mt-10">
+            <span
+                class="text-luxury-gold text-[10px] lg:text-xs tracking-[0.6em] uppercase mb-6 block reveal font-semibold">The
+                Pinnacle of Living</span>
+
+            <h1 class="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-serif mb-8 text-white reveal leading-none tracking-tight"
+                data-delay="200">
+                ODYSSEY
+            </h1>
+
+            <!-- Separador de Ubicación -->
+            <div class="flex items-center justify-center gap-4 sm:gap-6 reveal" data-delay="400">
+                <div class="h-[1px] w-12 sm:w-20 bg-luxury-gold/50"></div>
+                <p class="text-[10px] sm:text-xs font-medium tracking-[0.3em] text-white/80 uppercase">Marbella · Spain
+                </p>
+                <div class="h-[1px] w-12 sm:w-20 bg-luxury-gold/50"></div>
+            </div>
+
+            <!-- PRECIO INTEGRADO -->
+            <div class="mt-8 mb-8 reveal flex flex-col items-center" data-delay="500">
+                <span class="text-[10px] uppercase tracking-[0.2em] text-luxury-gold mb-2 block font-semibold">List
+                    Price</span>
+                <span class="text-3xl lg:text-4xl font-serif text-white tracking-widest block">€12.45M</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Section (LA VILLA) -->
+    <section id="propiedad"
+        class="snap-section min-h-screen flex flex-col justify-center py-20 lg:py-32 px-6 lg:px-10 max-w-7xl mx-auto">
+        <div class="grid lg:grid-cols-2 gap-16 lg:gap-32 items-center h-full">
+            <div class="reveal order-2 lg:order-1">
+                <h2 class="text-luxury-gold font-serif text-xs tracking-[0.4em] uppercase mb-6 font-bold">Concepto
+                    Arquitectónico</h2>
+                <h3 class="text-3xl lg:text-5xl font-serif mb-8 leading-tight text-white">"Simetría Perfecta entre
+                    Naturaleza y Concreto."</h3>
+                <p class="text-white/60 leading-relaxed font-light mb-10 text-sm lg:text-base text-justify">
+                    Diseñada para fundirse con la topografía de la Zagaleta, Villa Odyssey utiliza materiales nobles y
+                    tecnología de punta para crear una atmósfera de tranquilidad absoluta y seguridad impenetrable. Cada
+                    ángulo ha sido calculado para maximizar la luz del Mediterráneo.
+                </p>
+
+                <div id="stats-container"
+                    class="grid grid-cols-2 sm:grid-cols-3 gap-y-10 gap-x-6 border-t border-white/10 pt-10 mt-4">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+
+            <div class="relative reveal order-1 lg:order-2">
+                <div class="aspect-[3/4] overflow-hidden bg-luxury-grey relative group rounded-sm">
+                    <img src="assets/concepto.jpg"
+                        class="w-full h-full object-cover transition-transform duration-[3s] group-hover:scale-110 opacity-90 group-hover:opacity-100">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Visual Journey (ESPACIOS) -->
+    <section id="galeria"
+        class="snap-section min-h-screen flex flex-col justify-center py-20 lg:py-32 bg-[#080808] border-y border-white/5">
+        <div class="w-full max-w-[1700px] mx-auto grid lg:grid-cols-12 gap-10 lg:gap-20">
+            <div class="lg:col-span-4 px-0 lg:px-10 flex flex-col justify-center reveal">
+                <span
+                    class="text-luxury-gold text-[10px] uppercase tracking-[0.4em] mb-8 block font-bold text-center lg:text-left px-6">Narrativa
+                    Espacial</span>
+
+                <div id="narrative-menu" class="grid grid-cols-2 gap-2 px-6 lg:px-0 lg:flex lg:flex-col lg:gap-6">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+
+            <div class="lg:col-span-8 relative reveal px-0 lg:px-0 mt-8 lg:mt-0">
+                <div class="relative h-[50vh] sm:h-[60vh] lg:h-[80vh] w-full overflow-hidden group"
+                    id="spatial-display">
+                    <img id="active-spatial-img" src=""
+                        class="w-full h-full object-cover transition-all duration-1000 scale-105 group-hover:scale-100">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+
+                    <div
+                        class="absolute bottom-0 left-0 right-0 p-8 lg:p-16 lg:text-right bg-gradient-to-t from-black via-black/80 to-transparent">
+                        <span id="active-spatial-tag"
+                            class="text-luxury-gold text-[10px] tracking-[0.3em] uppercase mb-3 block font-bold">--</span>
+                        <h4 id="active-spatial-title" class="text-3xl lg:text-5xl font-serif text-white mb-4">--</h4>
+                        <p id="active-spatial-desc"
+                            class="text-white/70 text-xs lg:text-sm tracking-wide leading-relaxed max-w-xl lg:ml-auto">
+                            <!-- Dinámico -->
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section: Planos (ARQUITECTURA) -->
+    <section id="planos"
+        class="snap-section min-h-screen flex flex-col justify-center py-20 lg:py-32 bg-black border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-6 lg:px-10 w-full">
+            <div class="flex flex-col lg:flex-row justify-between items-end mb-12 lg:mb-20 reveal">
+                <div class="max-w-2xl">
+                    <span
+                        class="text-luxury-gold text-[10px] uppercase tracking-[0.4em] mb-4 block font-bold">Planimetría
+                        Técnica</span>
+                    <h2 class="text-4xl lg:text-6xl font-serif text-white mb-6 leading-none">Arquitectura de Vanguardia
+                    </h2>
+                    <p class="text-white/50 text-sm leading-relaxed">
+                        Distribución inteligente diseñada para maximizar la privacidad y el flujo de luz natural en cada
+                        nivel.
+                    </p>
+                </div>
+                <div id="plans-nav" class="flex gap-4 mt-8 lg:mt-0">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-10 items-start">
+                <div class="lg:col-span-8 reveal">
+                    <div class="glass-card p-4 lg:p-10 rounded-sm relative group overflow-hidden border-white/5">
+                        <div class="absolute inset-0 bg-blue-900/5 pointer-events-none"></div>
+                        <img id="active-plan-img" src=""
+                            class="w-full h-auto brightness-90 contrast-125 transition-all duration-700" alt="Plano">
+                    </div>
+                </div>
+                <div class="lg:col-span-4 reveal" data-delay="300">
+                    <div class="h-full flex flex-col justify-center border-l border-white/10 pl-8 lg:pl-12">
+                        <span id="plan-label"
+                            class="text-luxury-gold text-[10px] tracking-[0.3em] uppercase mb-4 block font-bold">--</span>
+                        <h4 id="plan-title" class="text-3xl font-serif text-white mb-6">--</h4>
+                        <ul id="plan-features" class="space-y-4 mb-10">
+                            <!-- Dinámico -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Location (ENTORNO) -->
+    <section id="ubicacion"
+        class="snap-section min-h-screen flex flex-col justify-center py-20 lg:py-32 bg-luxury-black border-t border-white/5 relative overflow-hidden">
+        <div
+            class="absolute top-0 right-0 w-[500px] h-[500px] bg-luxury-gold/5 rounded-full blur-[120px] pointer-events-none">
+        </div>
+
+        <div class="max-w-[1600px] mx-auto px-6 lg:px-10 w-full">
+            <div class="max-w-3xl mb-16 reveal">
+                <span class="text-luxury-gold text-[10px] uppercase tracking-[0.4em] mb-4 block font-bold">The
+                    Enclave</span>
+                <h2 class="text-4xl lg:text-6xl font-serif text-white mb-6 leading-none">La Zagaleta & Beyond</h2>
+                <p class="text-white/50 text-sm leading-relaxed max-w-xl">
+                    Ubicada estratégicamente para ofrecer el aislamiento de un refugio privado, pero conectada en
+                    minutos con el epicentro del lujo europeo.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
+                <!-- Columna Izquierda: Tarjetas -->
+                <div class="lg:col-span-5 flex flex-col gap-4 reveal h-full">
+                    <!-- Card 1 -->
+                    <div
+                        class="location-card group h-40 sm:h-48 rounded-sm cursor-pointer flex items-center relative flex-shrink-0">
+                        <div class="absolute inset-0 z-0 bg-black">
+                            <img src="assets/loc1.jpg"
+                                class="location-bg">
+                            <div class="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent"></div>
+                        </div>
+                        <div class="relative z-10 w-full px-8 flex justify-between items-center">
+                            <div>
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fa-solid fa-anchor text-luxury-gold text-lg"></i>
+                                    <span class="text-[9px] uppercase tracking-widest text-white/60">Yacht Club</span>
+                                </div>
+                                <h4
+                                    class="text-2xl font-serif text-white group-hover:text-luxury-gold transition-colors">
+                                    Puerto Banús</h4>
+                            </div>
+                            <div class="text-right group-hover:translate-x-[-10px] transition-transform duration-500">
+                                <span class="block text-3xl font-serif text-white">15</span>
+                                <span class="text-[9px] uppercase tracking-wide text-white/40">Minutos</span>
+                            </div>
+                        </div>
+                        <a href="https://www.google.com/maps/search/Puerto+Banus" target="_blank"
+                            class="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white text-black text-[9px] font-bold px-4 py-2 uppercase tracking-wide hover:bg-luxury-gold">Ver
+                            Ruta</a>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div
+                        class="location-card group h-40 sm:h-48 rounded-sm cursor-pointer flex items-center relative flex-shrink-0">
+                        <div class="absolute inset-0 z-0 bg-black">
+                            <img src="assets/loc2.jpg"
+                                class="location-bg">
+                            <div class="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent"></div>
+                        </div>
+                        <div class="relative z-10 w-full px-8 flex justify-between items-center">
+                            <div>
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fa-solid fa-golf-ball-tee text-luxury-gold text-lg"></i>
+                                    <span class="text-[9px] uppercase tracking-widest text-white/60">Valderrama</span>
+                                </div>
+                                <h4
+                                    class="text-2xl font-serif text-white group-hover:text-luxury-gold transition-colors">
+                                    Golf Valley</h4>
+                            </div>
+                            <div class="text-right group-hover:translate-x-[-10px] transition-transform duration-500">
+                                <span class="block text-3xl font-serif text-white">20</span>
+                                <span class="text-[9px] uppercase tracking-wide text-white/40">Minutos</span>
+                            </div>
+                        </div>
+                        <a href="https://www.google.com/maps/search/Valderrama+Golf" target="_blank"
+                            class="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white text-black text-[9px] font-bold px-4 py-2 uppercase tracking-wide hover:bg-luxury-gold">Ver
+                            Ruta</a>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div
+                        class="location-card group h-40 sm:h-48 rounded-sm cursor-pointer flex items-center relative flex-shrink-0">
+                        <div class="absolute inset-0 z-0 bg-black">
+                            <img src="assets/loc3.jpg"
+                                class="location-bg">
+                            <div class="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent"></div>
+                        </div>
+                        <div class="relative z-10 w-full px-8 flex justify-between items-center">
+                            <div>
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fa-solid fa-plane-up text-luxury-gold text-lg"></i>
+                                    <span class="text-[9px] uppercase tracking-widest text-white/60">Airport</span>
+                                </div>
+                                <h4
+                                    class="text-2xl font-serif text-white group-hover:text-luxury-gold transition-colors">
+                                    Málaga AGP</h4>
+                            </div>
+                            <div class="text-right group-hover:translate-x-[-10px] transition-transform duration-500">
+                                <span class="block text-3xl font-serif text-white">45</span>
+                                <span class="text-[9px] uppercase tracking-wide text-white/40">Minutos</span>
+                            </div>
+                        </div>
+                        <a href="https://www.google.com/maps/search/Malaga+Airport" target="_blank"
+                            class="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white text-black text-[9px] font-bold px-4 py-2 uppercase tracking-wide hover:bg-luxury-gold">Ver
+                            Ruta</a>
+                    </div>
+
+                    <div class="mt-auto pt-2 flex items-center justify-between px-2 opacity-60">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-helicopter text-luxury-gold text-xs"></i>
+                            <span class="text-[9px] uppercase tracking-widest text-white">Helipuerto: Sí</span>
+                        </div>
+                        <div class="text-[9px] uppercase tracking-widest text-white">
+                            <i class="fa-solid fa-shield-halved mr-1"></i> Zona Segura
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Mapa -->
+                <div
+                    class="lg:col-span-7 reveal h-full min-h-[500px] border border-white/10 rounded-sm overflow-hidden group relative">
+                    <div
+                        class="absolute inset-0 z-20 flex items-center justify-center bg-black/20 pointer-events-none group-hover:bg-transparent transition-colors">
+                        <div class="relative flex items-center justify-center">
+                            <div class="w-16 h-16 bg-luxury-gold/20 rounded-full animate-ping absolute"></div>
+                            <div
+                                class="w-4 h-4 bg-luxury-gold border-2 border-white rounded-full shadow-[0_0_20px_rgba(197,160,89,0.8)] z-30">
+                            </div>
+                            <div
+                                class="absolute bottom-8 bg-black/90 px-4 py-2 text-white text-[9px] tracking-widest uppercase border-l-2 border-luxury-gold whitespace-nowrap shadow-xl">
+                                Villa Odyssey
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- MAPA ESTÁTICO DE SUSTITUCIÓN (Reemplazado iFrame respetando todas las clases CSS para el efecto visual) -->
+                    <img src="assets/mapa.jpg" 
+                        class="absolute inset-0 w-full h-full object-cover grayscale-[100%] invert-[92%] contrast-[83%] group-hover:grayscale-[50%] transition-all duration-700" 
+                        alt="Mapa de la ubicación estático">
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer / Broker (CONTACTO) -->
+    <footer id="contacto"
+        class="snap-section pt-32 pb-20 px-6 border-t border-white/5 text-center bg-gradient-to-t from-[#0a0a0a] to-black min-h-[80vh] flex flex-col justify-center">
+        <div class="max-w-3xl mx-auto w-full reveal" id="broker-container">
+            <!-- Dinámico -->
+        </div>
+
+        <!-- BOTONES: DESCARGAR PDF MOVIDOS A LA ZONA DE CONTACTO -->
+        <div class="mt-12 mb-16 flex justify-center gap-4 flex-wrap w-full reveal" data-delay="300">
+            <button onclick="downloadPDF('portrait')" id="pdf-btn-portrait"
+                class="px-7 py-3.5 border border-luxury-gold text-luxury-gold text-xs tracking-[0.2em] uppercase hover:bg-luxury-gold hover:text-black transition-all duration-300 flex items-center gap-3 bg-black/30 backdrop-blur-sm">
+                <i class="fa-solid fa-file-pdf text-lg"></i>
+                <span>PDF Vertical</span>
+            </button>
+            <button onclick="downloadPDF('landscape')" id="pdf-btn-landscape"
+                class="px-7 py-3.5 border border-luxury-gold text-luxury-gold text-xs tracking-[0.2em] uppercase hover:bg-luxury-gold hover:text-black transition-all duration-300 flex items-center gap-3 bg-black/30 backdrop-blur-sm">
+                <i class="fa-solid fa-file-pdf text-lg"></i>
+                <span>PDF Horizontal</span>
+            </button>
+        </div>
+
+        <div class="mt-8 text-[10px] tracking-[0.2em] text-white/30 uppercase reveal" data-delay="400">
+            © 2024 Luxury Estate Portfolio · Odyssey Residence<br>
+            <span class="text-[9px] mt-2 block">All Rights Reserved · Privacy Policy</span>
+        </div>
+    </footer>
+
+
+    <!-- BOTÓN FLOTANTE WHATSAPP (Ajustado para Escritorio y Móvil) -->
+    <div class="fixed bottom-6 right-6 lg:bottom-12 lg:right-12 z-[150] flex flex-col gap-4 pointer-events-auto">
+        <a href="https://wa.me/34600000000?text=Hola%20Isabella,%20me%20gustar%C3%ADa%20recibir%20m%C3%A1s%20informaci%C3%B3n%20sobre%20Villa%20Odyssey."
+            target="_blank"
+            class="w-16 h-16 glass-card rounded-full flex items-center justify-center group bg-luxury-gold border border-luxury-gold lg:bg-transparent lg:border-luxury-gold/15 hover:bg-luxury-gold hover:border-luxury-gold transition-all duration-300 hover:scale-105 shadow-[0_4px_20px_rgba(197,160,89,0.3)] lg:shadow-2xl">
+            <i class="fa-brands fa-whatsapp text-black lg:text-white text-3xl group-hover:text-black transition-colors"></i>
+        </a>
+    </div>
+
+    <script>
+        const DATA = Object.freeze({
+            property: {
+                stats: [
+                    { label: "Parcela Privada", val: "4.200m²", icon: "fa-expand" },
+                    { label: "Dormitorios", val: "7 Suites", icon: "fa-bed" },
+                    { label: "Garaje Subt.", val: "12 Autos", icon: "fa-car-side" },
+                    { label: "Baños", val: "9 + 2", icon: "fa-bath" },
+                    { label: "Cine Privado", val: "Dolby Atmos", icon: "fa-film" },
+                    { label: "Seguridad", val: "24h Gated", icon: "fa-shield-halved" }
+                ],
+                spatial: [
+                    {
+                        title: "Living Principal",
+                        tag: "Zona Social · 140m²",
+                        desc: "Espacio diáfano con techos de 6 metros, chimenea de bioetanol de doble cara y ventanales Panoramah!® motorizados que difuminan el límite entre el salón y la terraza principal.",
+                        img: "assets/espacio1.jpg"
+                    },
+                    {
+                        title: "Cocina Chef",
+                        tag: "Culinary Space · Gaggenau",
+                        desc: "Obra maestra funcional equipada con doble isla de mármol Calacatta Gold, electrodomésticos Gaggenau serie 400 y vinoteca climatizada para 300 botellas.",
+                        img: "assets/espacio2.jpg"
+                    },
+                    {
+                        title: "Master Suite",
+                        tag: "Ala Privada · Sur",
+                        desc: "120m² de privacidad absoluta. Incluye vestidores His & Hers, baño spa con vistas al mar y terraza privada con jacuzzi exterior oculto.",
+                        img: "assets/espacio3.jpg"
+                    },
+                    {
+                        title: "Wellness & Spa",
+                        tag: "Nivel Inferior · Relax",
+                        desc: "Circuito termal completo con piscina interior climatizada, sauna finlandesa, hammam de piedra natural y gimnasio profesional Technogym.",
+                        img: "assets/espacio4.jpg"
+                    },
+                    {
+                        title: "Exteriores",
+                        tag: "Jardín & Infinity Pool",
+                        desc: "Piscina infinity de 18 metros con cloración salina, zona de BBQ cubierta y jardines maduros diseñados para garantizar privacidad visual total.",
+                        img: "assets/espacio5.jpg"
+                    }
+                ],
+                plans: [
+                    {
+                        title: "Planta Principal",
+                        label: "Level 0 · Social & Guest",
+                        img: "assets/plano1.jpg",
+                        features: ["Salón de Doble Altura", "Cocina de Concepto Abierto", "2 Suites de Invitados", "Terraza Principal & Infinity Pool"]
+                    },
+                    {
+                        title: "Planta Alta",
+                        label: "Level 1 · Private Suites",
+                        img: "assets/plano2.jpg",
+                        features: ["Master Suite 120m²", "3 Suites Familiares", "Estudio / Biblioteca", "Terrazas Privadas en cada ala"]
+                    },
+                    {
+                        title: "Nivel Wellness",
+                        label: "Level -1 · Entertainment",
+                        img: "assets/plano3.jpg",
+                        features: ["Spa & Piscina Interior", "Cine Dolby Atmos", "Gimnasio Profesional", "Garaje para 12 Vehículos"]
+                    }
+                ]
+            },
+            broker: {
+                name: "Isabella Valli",
+                role: "Senior Partner · Platinum Real Estate",
+                img: "assets/broker.jpg",
+                phone: "34600000000",
+                bio: "Especialista en el mercado de ultra-lujo de La Zagaleta y Sierra Blanca. Más de €200M en transacciones cerradas garantizan una gestión discreta y eficiente.",
+                cta: "Contactar por WhatsApp"
+            }
+        });
+
+        function safeRender() {
+            // Stats Render
+            const statsCont = document.getElementById('stats-container');
+            DATA.property.stats.forEach(s => {
+                const div = document.createElement('div');
+                div.className = "flex flex-col items-start p-4 hover:bg-white/5 transition-colors rounded-sm border border-transparent hover:border-white/5";
+                div.innerHTML = `
+                    <i class="fa-solid ${s.icon} text-luxury-gold text-xl mb-3"></i>
+                    <span class="text-lg lg:text-xl font-serif text-white mb-1">${s.val}</span>
+                    <span class="text-[10px] uppercase tracking-widest text-white/40">${s.label}</span>
+                `;
+                statsCont.appendChild(div);
+            });
+
+            // Spatial Narrative Render
+            const narrativeMenu = document.getElementById('narrative-menu');
+            DATA.property.spatial.forEach((item, index) => {
+                const btn = document.createElement('button');
+                btn.className = `spatial-btn ${index === 0 ? 'active' : ''}`;
+                btn.textContent = item.title;
+                btn.onclick = () => updateSpatial(index);
+                narrativeMenu.appendChild(btn);
+            });
+
+            updateSpatial(0);
+
+            // Plans Render
+            const plansNav = document.getElementById('plans-nav');
+            DATA.property.plans.forEach((plan, index) => {
+                const btn = document.createElement('button');
+                btn.className = `px-6 py-2 border border-white/10 text-[9px] uppercase tracking-widest text-white/40 hover:text-luxury-gold transition-all duration-300 ${index === 0 ? 'border-luxury-gold text-luxury-gold bg-luxury-gold/5' : ''}`;
+                btn.id = `plan-btn-${index}`;
+                btn.textContent = plan.title;
+                btn.onclick = () => updatePlan(index);
+                plansNav.appendChild(btn);
+            });
+            updatePlan(0);
+
+            // Broker Render
+            const b = DATA.broker;
+            const brokerCont = document.getElementById('broker-container');
+            const waMessage = encodeURIComponent("Hola Isabella, me gustaría recibir más información sobre Villa Odyssey.");
+
+            brokerCont.innerHTML = `
+                <div class="relative w-32 h-32 lg:w-48 lg:h-48 mx-auto mb-8 group cursor-pointer">
+                    <div class="absolute inset-0 rounded-full border border-luxury-gold/30 animate-[spin_10s_linear_infinite] group-hover:pause"></div>
+                    <img src="${b.img}" class="w-full h-full rounded-full p-2 object-cover grayscale group-hover:grayscale-0 transition-all duration-700">
+                </div>
+                
+                <span class="text-luxury-gold text-[10px] tracking-[0.3em] uppercase mb-4 block font-semibold">${b.role}</span>
+                <h3 class="text-4xl lg:text-5xl font-serif text-white mb-6">${b.name}</h3>
+                <p class="text-white/60 text-sm leading-loose font-light mb-8 max-w-xl mx-auto">${b.bio}</p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
+                    <a href="https://wa.me/${b.phone}?text=${waMessage}" target="_blank"
+                        class="w-full sm:w-auto px-10 py-4 bg-luxury-gold text-black text-xs uppercase tracking-[0.2em] font-bold hover:bg-white transition-colors flex items-center justify-center gap-2">
+                        <i class="fa-brands fa-whatsapp text-lg"></i> ${b.cta}
+                    </a>
+                </div>
+            `;
+        }
+
+        function updateSpatial(index) {
+            const activeData = DATA.property.spatial[index];
+
+            document.querySelectorAll('.spatial-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', idx === index);
+            });
+
+            const img = document.getElementById('active-spatial-img');
+            img.style.opacity = '0.5';
+            img.style.transform = 'scale(1.05)';
+
+            setTimeout(() => {
+                img.src = activeData.img;
+                document.getElementById('active-spatial-tag').textContent = activeData.tag;
+                document.getElementById('active-spatial-title').textContent = activeData.title;
+                document.getElementById('active-spatial-desc').textContent = activeData.desc;
+
+                img.onload = () => {
+                    img.style.opacity = '1';
+                    img.style.transform = 'scale(1)';
+                };
+            }, 300);
+        }
+
+        function updatePlan(index) {
+            const plan = DATA.property.plans[index];
+
+            // UI Update
+            document.querySelectorAll('[id^="plan-btn-"]').forEach((btn, idx) => {
+                const isActive = idx === index;
+                btn.classList.toggle('border-luxury-gold', isActive);
+                btn.classList.toggle('text-luxury-gold', isActive);
+                btn.classList.toggle('bg-luxury-gold/5', isActive);
+                btn.classList.toggle('text-white/40', !isActive);
+            });
+
+            const img = document.getElementById('active-plan-img');
+            img.style.opacity = '0';
+
+            setTimeout(() => {
+                img.src = plan.img;
+                document.getElementById('plan-label').textContent = plan.label;
+                document.getElementById('plan-title').textContent = plan.title;
+
+                const featuresCont = document.getElementById('plan-features');
+                featuresCont.innerHTML = plan.features.map(f => `
+                    <li class="flex items-center gap-3 text-white/60 text-xs tracking-wide">
+                        <div class="w-1.5 h-1.5 rounded-full bg-luxury-gold"></div>
+                        ${f}
+                    </li>
+                `).join('');
+
+                img.onload = () => img.style.opacity = '1';
+            }, 300);
+        }
+
+        // Lógica del Menú Móvil Hamburguesa
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const closeMenuBtn = document.getElementById('close-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+
+        function toggleMobileMenu() {
+            const isClosed = mobileMenu.classList.contains('opacity-0');
+            if (isClosed) {
+                mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
+                mobileMenu.classList.add('opacity-100', 'pointer-events-auto');
+                document.documentElement.style.overflowY = 'hidden';
+            } else {
+                mobileMenu.classList.add('opacity-0', 'pointer-events-none');
+                mobileMenu.classList.remove('opacity-100', 'pointer-events-auto');
+                document.documentElement.style.overflowY = 'scroll';
+            }
+        }
+
+        hamburgerBtn.addEventListener('click', toggleMobileMenu);
+        closeMenuBtn.addEventListener('click', toggleMobileMenu);
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                toggleMobileMenu();
+            });
+        });
+
+        // ====== GENERACIÓN DEL PDF — DOSSIER PROFESIONAL ======
+        // FIX: Se agregó scrollY: 0 en html2canvas para evitar el offset negro
+        async function downloadPDF(orientation = 'portrait') {
+            const isLand = orientation === 'landscape';
+            const btnP = document.getElementById('pdf-btn-portrait');
+            const btnL = document.getElementById('pdf-btn-landscape');
+            const btn = isLand ? btnL : btnP;
+            const originalText = btn.innerHTML;
+
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-lg"></i><span> Preparando...</span>';
+            btn.style.pointerEvents = 'none';
+            (isLand ? btnP : btnL).style.pointerEvents = 'none';
+
+            // Formato CARTA (Letter) — swap si landscape
+            const pW = isLand ? 1056 : 816;
+            const pH = isLand ? 816 : 1056;
+            const gold = '#C5A059';
+            const black = '#07070A';
+            const darkBg = '#0D0D0F';
+            const serif = "'Georgia', 'Times New Roman', serif";
+            const sans = "'Helvetica Neue', Arial, sans-serif";
+
+            // ---- Helper: encabezado de página (excepto portada) ----
+            const pageHeader = (pageNum, total) => `
+              <div style="position:absolute;top:0;left:0;right:0;height:52px;
+                          display:flex;align-items:center;justify-content:space-between;
+                          padding:0 50px;border-bottom:1px solid rgba(197,160,89,0.25);
+                          background:${black};box-sizing:border-box;">
+                <span style="font-family:${serif};font-size:11px;letter-spacing:5px;
+                             color:${gold};text-transform:uppercase;">Villa Odyssey</span>
+                <span style="font-size:9px;letter-spacing:3px;color:rgba(255,255,255,0.3);
+                             text-transform:uppercase;">Marbella · Spain</span>
+                <span style="font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.25);">
+                  ${pageNum} / ${total}
+                </span>
+              </div>`;
+
+            // ---- Helper: pie de página ----
+            const pageFooter = () => `
+              <div style="position:absolute;bottom:0;left:0;right:0;height:36px;
+                          display:flex;align-items:center;justify-content:center;
+                          border-top:1px solid rgba(255,255,255,0.06);
+                          background:${black};box-sizing:border-box;">
+                <span style="font-size:8px;letter-spacing:3px;color:rgba(255,255,255,0.2);
+                             text-transform:uppercase;">Confidencial · Luxury Estate Portfolio · All Rights Reserved</span>
+              </div>`;
+
+            // ---- Helper: regla dorada decorativa ----
+            const goldRule = (w = '60px') =>
+                `<div style="width:${w};height:1px;background:${gold};margin-bottom:28px;"></div>`;
+
+            // Número total de páginas = portada + villa + espacios + planos + broker
+            const totalPages = 1 + 1 + DATA.property.spatial.length + 1 + 1;
+            let pg = 0; // contador de página
+
+            let html = `<div style="font-family:${sans};color:#ffffff;">`;
+
+            /* ==========================================================
+               PÁGINA 1 — PORTADA / COVER
+            ========================================================== */
+            pg = 1;
+            const heroImg = "assets/hero.jpg";
+            const statsRow = [['7', 'Suites'], ['9+2', 'Baños'], ['4200', 'm² Parcela'], ['12', 'Garaje']].map((item, i, arr) => `
+              <div style="flex:1;text-align:center;padding:${isLand ? '10px 6px' : '14px 8px'};border-right:${i < arr.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none'};">
+                <p style="font-family:${serif};font-size:${isLand ? '17' : '20'}px;color:#fff;margin:0 0 3px 0;">${item[0]}</p>
+                <p style="font-size:${isLand ? '7' : '8'}px;letter-spacing:2px;color:rgba(255,255,255,0.35);text-transform:uppercase;margin:0;">${item[1]}</p>
+              </div>`).join('');
+
+            if (isLand) {
+                html += `
+            <div style="width:${pW}px;height:${pH}px;position:relative;overflow:hidden;background:${black};display:flex;flex-direction:row;">
+              <div style="width:50%;position:relative;overflow:hidden;flex-shrink:0;">
+                <div style="width:100%;height:100%;background-image:url('${heroImg}');background-size:cover;background-position:center;"></div>
+                <div style="position:absolute;inset:0;background:linear-gradient(to right,transparent 60%,${black});"></div>
+                <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:${gold};"></div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 50px;">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;width:100%;">
+                  <div style="flex:1;height:1px;background:rgba(197,160,89,0.35);"></div>
+                  <span style="font-size:8px;letter-spacing:5px;color:${gold};text-transform:uppercase;white-space:nowrap;">The Pinnacle of Living</span>
+                  <div style="flex:1;height:1px;background:rgba(197,160,89,0.35);"></div>
+                </div>
+                <h1 style="font-family:${serif};font-size:68px;font-weight:400;letter-spacing:8px;color:#fff;margin:0 0 4px 0;line-height:1;">ODYSSEY</h1>
+                <p style="font-family:${serif};font-size:11px;letter-spacing:4px;color:rgba(255,255,255,0.45);text-transform:uppercase;margin:0 0 22px 0;">VILLA · MARBELLA · SPAIN</p>
+                <div style="border:1px solid ${gold};padding:14px 40px;display:inline-block;margin-bottom:22px;">
+                  <p style="font-size:8px;letter-spacing:4px;color:${gold};text-transform:uppercase;margin:0 0 6px 0;">List Price</p>
+                  <p style="font-family:${serif};font-size:34px;font-weight:400;color:#fff;margin:0;letter-spacing:3px;">€ 12.45 M</p>
+                </div>
+                <div style="display:flex;gap:0;border:1px solid rgba(255,255,255,0.1);width:100%;max-width:420px;">${statsRow}</div>
+              </div>
+            </div>`;
+            } else {
+                html += `
+            <div style="width:${pW}px;height:${pH}px;position:relative;overflow:hidden;background:${black};display:flex;flex-direction:column;">
+              <div style="position:relative;width:100%;height:${Math.round(pH * 0.55)}px;overflow:hidden;flex-shrink:0;">
+                <div style="width:100%;height:100%;background-image:url('${heroImg}');background-size:cover;background-position:center;"></div>
+                <div style="position:absolute;bottom:0;left:0;right:0;height:180px;background:linear-gradient(to bottom,transparent,${black});"></div>
+                <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:${gold};"></div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:36px 60px 0 60px;position:relative;">
+                <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+                  <div style="flex:1;height:1px;background:rgba(197,160,89,0.35);"></div>
+                  <span style="font-size:9px;letter-spacing:6px;color:${gold};text-transform:uppercase;white-space:nowrap;">The Pinnacle of Living</span>
+                  <div style="flex:1;height:1px;background:rgba(197,160,89,0.35);"></div>
+                </div>
+                <h1 style="font-family:${serif};font-size:92px;font-weight:400;letter-spacing:10px;color:#fff;margin:0 0 4px 0;line-height:1;">ODYSSEY</h1>
+                <p style="font-family:${serif};font-size:13px;letter-spacing:5px;color:rgba(255,255,255,0.45);text-transform:uppercase;margin:0 0 28px 0;">VILLA · MARBELLA · SPAIN</p>
+                <div style="border:1px solid ${gold};padding:18px 50px;display:inline-block;margin-bottom:28px;">
+                  <p style="font-size:9px;letter-spacing:5px;color:${gold};text-transform:uppercase;margin:0 0 8px 0;">List Price</p>
+                  <p style="font-family:${serif};font-size:42px;font-weight:400;color:#fff;margin:0;letter-spacing:3px;">€ 12.45 M</p>
+                </div>
+                <div style="display:flex;gap:0;border:1px solid rgba(255,255,255,0.1);width:100%;max-width:540px;">${statsRow}</div>
+              </div>
+              <div style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 50px;border-top:1px solid rgba(197,160,89,0.2);box-sizing:border-box;flex-shrink:0;">
+                <span style="font-size:8px;letter-spacing:3px;color:rgba(255,255,255,0.25);text-transform:uppercase;">Dossier Confidencial</span>
+                <div style="height:1px;flex:1;margin:0 20px;background:rgba(197,160,89,0.2);"></div>
+                <span style="font-size:8px;letter-spacing:3px;color:rgba(255,255,255,0.25);text-transform:uppercase;">Luxury Estate Portfolio</span>
+              </div>
+            </div>`;
+            }
+
+            /* ==========================================================
+               PÁGINA 2 — LA VILLA (Resumen editorial + stats)
+            ========================================================== */
+            pg = 2;
+            html += `
+            <div style="width:${pW}px;height:${pH}px;position:relative;background:${darkBg};
+                        box-sizing:border-box;overflow:hidden;">
+              ${pageHeader(pg, totalPages)}
+              ${pageFooter()}
+
+              <!-- Banda lateral dorada -->
+              <div style="position:absolute;left:0;top:52px;bottom:36px;width:4px;background:${gold};"></div>
+
+              <!-- SPLIT: imagen izquierda / texto derecha -->
+              <div style="display:flex;height:calc(100% - 88px);margin-top:52px;margin-bottom:36px;">
+
+                <!-- Imagen 45% — background-image para evitar deformación -->
+                <div style="width:45%;position:relative;overflow:hidden;flex-shrink:0;">
+                  <div style="width:100%;height:100%;
+                              background-image:url('assets/concepto.jpg');
+                              background-size:cover;background-position:center;"></div>
+                  <div style="position:absolute;inset:0;background:linear-gradient(to right,transparent 60%,${darkBg});"></div>
+                </div>
+
+                <!-- Texto 55% -->
+                <div style="flex:1;padding:52px 48px 52px 40px;display:flex;flex-direction:column;
+                            justify-content:center;overflow:hidden;">
+                  <p style="font-size:9px;letter-spacing:5px;color:${gold};text-transform:uppercase;
+                             margin:0 0 14px 0;">Concepto Arquitectónico</p>
+                  ${goldRule('48px')}
+                  <h2 style="font-family:${serif};font-size:28px;font-weight:400;line-height:1.35;
+                             color:#ffffff;margin:0 0 20px 0;">
+                    "Simetría Perfecta entre<br>Naturaleza y Concreto."
+                  </h2>
+                  <p style="font-size:11px;line-height:1.9;color:rgba(255,255,255,0.55);
+                             margin:0 0 36px 0;">
+                    Diseñada para fundirse con la topografía de La Zagaleta, Villa Odyssey utiliza
+                    materiales nobles y tecnología de punta para crear una atmósfera de tranquilidad
+                    absoluta y seguridad impenetrable. Cada ángulo ha sido calculado para maximizar
+                    la luz del Mediterráneo y las vistas panorámicas al mar.
+                  </p>
+
+                  <!-- Separador -->
+                  <div style="height:1px;background:rgba(197,160,89,0.2);margin-bottom:28px;"></div>
+
+                  <!-- Stats Grid 3x2 -->
+                  <div style="display:flex;flex-wrap:wrap;gap:20px 16px;">
+                    ${DATA.property.stats.map(s => `
+                    <div style="width:calc(33% - 11px);padding:16px;
+                                border:1px solid rgba(255,255,255,0.07);
+                                background:rgba(255,255,255,0.02);box-sizing:border-box;">
+                      <p style="font-family:${serif};font-size:18px;color:#ffffff;margin:0 0 5px 0;">${s.val}</p>
+                      <p style="font-size:8px;letter-spacing:2px;color:${gold};
+                                 text-transform:uppercase;margin:0;">${s.label}</p>
+                    </div>`).join('')}
+                  </div>
+                </div>
+              </div>
+            </div>`;
+
+            DATA.property.spatial.forEach((sp, idx) => {
+                pg = 3 + idx;
+                const isEven = idx % 2 === 0;
+                const imgH = Math.round((pH - 88) * 0.52);
+                const txtH = Math.round((pH - 88) * 0.48);
+
+                html += `<div style="width:${pW}px;height:${pH}px;position:relative;background:${black};box-sizing:border-box;overflow:hidden;">
+                  ${pageHeader(pg, totalPages)}${pageFooter()}`;
+
+                if (isLand) {
+                    // LANDSCAPE: imagen izq 55%, texto der 45%
+                    html += `
+                  <div style="display:flex;height:calc(100% - 88px);margin-top:52px;margin-bottom:36px;">
+                    <div style="width:55%;position:relative;overflow:hidden;flex-shrink:0;">
+                      <div style="width:100%;height:100%;background-image:url('${sp.img}');background-size:cover;background-position:center;"></div>
+                      <div style="position:absolute;inset:0;background:linear-gradient(to right,transparent 50%,${black});"></div>
+                      <div style="position:absolute;top:20px;${isEven ? 'right' : 'left'}:20px;font-family:${serif};font-size:64px;color:rgba(197,160,89,0.12);line-height:1;font-weight:700;">0${idx + 1}</div>
+                      <div style="position:absolute;bottom:20px;left:0;background:${gold};padding:8px 20px;">
+                        <span style="font-size:8px;letter-spacing:4px;color:${black};text-transform:uppercase;font-weight:700;">${sp.tag}</span>
+                      </div>
+                    </div>
+                    <div style="flex:1;padding:40px 44px;display:flex;flex-direction:column;justify-content:center;">
+                      <span style="font-family:${serif};font-size:13px;color:${gold};letter-spacing:3px;margin-bottom:12px;display:block;">0${idx + 1}</span>
+                      <h3 style="font-family:${serif};font-size:30px;font-weight:400;color:#fff;margin:0 0 12px 0;letter-spacing:1px;">${sp.title}</h3>
+                      <div style="width:40px;height:1px;background:${gold};margin-bottom:14px;"></div>
+                      <p style="font-size:11px;line-height:1.85;color:rgba(255,255,255,0.58);margin:0;">${sp.desc}</p>
+                    </div>
+                  </div>`;
+                } else {
+                    // PORTRAIT: original stacked
+                    html += `
+                  <div style="position:relative;width:100%;height:${imgH}px;overflow:hidden;margin-top:52px;flex-shrink:0;">
+                    <div style="width:100%;height:100%;background-image:url('${sp.img}');background-size:cover;background-position:center;"></div>
+                    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,7,10,0.1),rgba(7,7,10,0.65));"></div>
+                    <div style="position:absolute;top:20px;right:30px;font-family:${serif};font-size:72px;color:rgba(197,160,89,0.12);line-height:1;font-weight:700;">0${idx + 1}</div>
+                    <div style="position:absolute;bottom:20px;left:${isEven ? '0' : 'auto'};right:${isEven ? 'auto' : '0'};background:${gold};padding:8px 20px;">
+                      <span style="font-size:8px;letter-spacing:4px;color:${black};text-transform:uppercase;font-weight:700;">${sp.tag}</span>
+                    </div>
+                  </div>
+                  <div style="padding:36px 52px;display:flex;flex-direction:column;justify-content:center;flex:1;height:${txtH}px;box-sizing:border-box;">
+                    <div style="display:flex;align-items:flex-start;gap:32px;">
+                      <div style="flex-shrink:0;padding-top:8px;">
+                        <span style="font-family:${serif};font-size:13px;color:${gold};letter-spacing:3px;">0${idx + 1}</span>
+                        <div style="width:1px;height:40px;background:rgba(197,160,89,0.3);margin:8px auto 0 auto;"></div>
+                      </div>
+                      <div style="flex:1;">
+                        <h3 style="font-family:${serif};font-size:34px;font-weight:400;color:#fff;margin:0 0 14px 0;letter-spacing:1px;">${sp.title}</h3>
+                        <div style="width:40px;height:1px;background:${gold};margin-bottom:16px;"></div>
+                        <p style="font-size:11.5px;line-height:1.9;color:rgba(255,255,255,0.58);margin:0;">${sp.desc}</p>
+                      </div>
+                    </div>
+                  </div>`;
+                }
+                html += `</div>`;
+            });
+
+            /* ==========================================================
+               PÁGINA PLANOS — ARQUITECTURA TÉCNICA
+            ========================================================== */
+            pg = 3 + DATA.property.spatial.length;
+            const mainPlan = DATA.property.plans[0];
+            html += `
+            <div style="width:${pW}px;height:${pH}px;position:relative;background:${darkBg};
+                        box-sizing:border-box;overflow:hidden;">
+              ${pageHeader(pg, totalPages)}
+              ${pageFooter()}
+
+              <div style="padding:80px 60px 40px 60px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;">
+                <div style="margin-bottom:40px;">
+                  <p style="font-size:9px;letter-spacing:5px;color:${gold};text-transform:uppercase;margin:0 0 12px 0;">Planimetría Técnica</p>
+                  <h3 style="font-family:${serif};font-size:38px;color:#ffffff;margin:0 0 10px 0;">Arquitectura & Distribución</h3>
+                  <div style="width:60px;height:1px;background:${gold};"></div>
+                </div>
+
+                <!-- Contenedor del Plano -->
+                <div style="flex:1;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);
+                            display:flex;align-items:center;justify-content:center;padding:40px;position:relative;">
+                  <!-- Marcas de agua decorativas estilo técnico -->
+                  <div style="position:absolute;top:20px;left:20px;font-size:8px;color:rgba(197,160,89,0.2);font-family:monospace;">
+                    REF_ODYSSEY_V01 // SCALE 1:100
+                  </div>
+                  <img src="${mainPlan.img}" crossorigin="anonymous" 
+                       style="max-width:100%;max-height:100%;object-fit:contain;filter:brightness(1.2) contrast(1.1) invert(0.05);" />
+                </div>
+
+                <!-- Detalles del plano en el PDF -->
+                <div style="margin-top:40px;display:flex;gap:40px;">
+                  <div style="flex:1;padding-right:40px;border-right:1px solid rgba(255,255,255,0.1);">
+                    <p style="font-family:${serif};font-size:20px;color:${gold};margin:0 0 15px 0;">${mainPlan.title}</p>
+                    <p style="font-size:11px;line-height:1.8;color:rgba(255,255,255,0.4);">
+                      Distribución técnica optimizada para la integración de espacios sociales y zonas privadas, 
+                      garantizando la ventilación cruzada y el aprovechamiento térmico.
+                    </p>
+                  </div>
+                  <div style="flex:1;">
+                    <p style="font-size:9px;letter-spacing:3px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin:0 0 15px 0;">Características Clave</p>
+                    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                      ${mainPlan.features.map(f => `
+                        <div style="font-size:10px;color:#ffffff;background:rgba(197,160,89,0.1);padding:6px 12px;border:1px solid rgba(197,160,89,0.2);">
+                          ${f}
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>`;
+
+            /* ==========================================================
+               ÚLTIMA PÁGINA — BROKER / CONTACTO
+            ========================================================== */
+            pg = totalPages;
+            const b = DATA.broker;
+            html += `
+            <div style="width:${pW}px;height:${pH}px;position:relative;background:${darkBg};
+                        box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;">
+              ${pageHeader(pg, totalPages)}
+              ${pageFooter()}
+
+              <!-- Fondo decorativo mitad superior — background-image para proporción perfecta -->
+              <div style="position:absolute;top:52px;left:0;right:0;
+                          height:${Math.round((pH - 88) * 0.48)}px;overflow:hidden;">
+                <div style="width:100%;height:100%;
+                            background-image:url('${b.img}');
+                            background-size:cover;background-position:center top;
+                            filter:grayscale(60%);opacity:0.5;"></div>
+                <div style="position:absolute;inset:0;
+                            background:linear-gradient(to bottom,rgba(13,13,15,0.4),${darkBg});"></div>
+              </div>
+
+              <!-- Contenido central: tarjeta de contacto -->
+              <div style="position:relative;z-index:10;display:flex;flex-direction:column;
+                          align-items:center;justify-content:flex-end;
+                          height:calc(100% - 88px);margin-top:52px;margin-bottom:36px;
+                          padding:0 60px 60px 60px;box-sizing:border-box;">
+
+                <!-- Avatar superpuesto -->
+                <div style="width:110px;height:110px;border-radius:50%;overflow:hidden;
+                            border:2px solid ${gold};padding:3px;background:${darkBg};
+                            flex-shrink:0;margin-bottom:20px;box-sizing:border-box;">
+                  <img src="${b.img}" crossorigin="anonymous"
+                       style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;" />
+                </div>
+
+                <!-- Nombre y rol -->
+                <p style="font-size:9px;letter-spacing:5px;color:${gold};text-transform:uppercase;
+                           margin:0 0 10px 0;text-align:center;">${b.role}</p>
+                <h3 style="font-family:${serif};font-size:42px;font-weight:400;color:#ffffff;
+                           margin:0 0 6px 0;text-align:center;letter-spacing:2px;">${b.name}</h3>
+
+                <!-- Divisor -->
+                <div style="display:flex;align-items:center;gap:16px;width:100%;max-width:420px;
+                            margin:18px auto 22px auto;">
+                  <div style="flex:1;height:1px;background:rgba(197,160,89,0.3);"></div>
+                  <span style="font-size:8px;letter-spacing:4px;color:rgba(255,255,255,0.3);
+                               text-transform:uppercase;">Senior Partner</span>
+                  <div style="flex:1;height:1px;background:rgba(197,160,89,0.3);"></div>
+                </div>
+
+                <p style="font-size:11px;line-height:1.85;color:rgba(255,255,255,0.5);
+                           max-width:440px;text-align:center;margin:0 0 30px 0;">${b.bio}</p>
+
+                <!-- Tarjeta de contacto -->
+                <div style="width:100%;max-width:460px;border:1px solid rgba(197,160,89,0.4);
+                            padding:28px 36px;box-sizing:border-box;background:rgba(7,7,10,0.9);
+                            display:flex;flex-direction:column;align-items:center;gap:10px;">
+                  <p style="font-size:8px;letter-spacing:4px;color:rgba(197,160,89,0.8);
+                             text-transform:uppercase;margin:0;">Contacto Directo</p>
+                  <p style="font-family:${serif};font-size:26px;color:#ffffff;margin:0;
+                             letter-spacing:2px;">+${b.phone}</p>
+
+                  <!-- Separador fino -->
+                  <div style="width:100%;height:1px;background:rgba(255,255,255,0.08);margin:4px 0;"></div>
+
+                  <p style="font-size:8px;letter-spacing:2px;color:rgba(255,255,255,0.2);
+                             text-transform:uppercase;text-align:center;margin:0;">
+                    Dossier Confidencial · Solo para uso privado · Villa Odyssey 2024
+                  </p>
+                </div>
+              </div>
+            </div>`;
+
+            html += `</div>`;
+
+            // ---- Descarga automática del PDF con máxima calidad ----
+            const opt = {
+                margin: 0,
+                filename: 'Villa_Odyssey_Dossier_Privado.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 3, 
+                    useCORS: true, 
+                    allowTaint: false, 
+                    backgroundColor: black, 
+                    logging: false,
+                    scrollY: 0, // <--- ESTO SOLUCIONA EL OFFSET NEGRO
+                    windowY: 0
+                },
+                jsPDF: { unit: 'px', format: [pW, pH], orientation: orientation, hotfixes: ['px_scaling'] }
+            };
+
+            try {
+                await html2pdf().set(opt).from(html).save();
+            } catch (err) {
+                console.error('Error al generar el PDF:', err);
+                alert('Hubo un error al generar el PDF. Por favor, inténtelo de nuevo.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.style.pointerEvents = 'auto';
+                (isLand ? btnP : btnL).style.pointerEvents = 'auto';
+            }
+        }
+
+        // Custom Cursor
+        const cursor = document.getElementById('cursor');
+        let mouseX = 0, mouseY = 0;
+        let cursorX = 0, cursorY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function animateCursor() {
+            cursorX += (mouseX - cursorX) * 0.2;
+            cursorY += (mouseY - cursorY) * 0.2;
+            cursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0) translate(-50%, -50%)`;
+            requestAnimationFrame(animateCursor);
+        }
+
+        if (window.matchMedia("(min-width: 768px)").matches) {
+            animateCursor();
+            document.querySelectorAll('a, button, .poi-card, .location-card').forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    cursor.style.width = '60px';
+                    cursor.style.height = '60px';
+                    cursor.style.backgroundColor = 'rgba(197, 160, 89, 0.1)';
+                    cursor.style.border = '1px solid rgba(197, 160, 89, 0.5)';
+                });
+                el.addEventListener('mouseleave', () => {
+                    cursor.style.width = '30px';
+                    cursor.style.height = '30px';
+                    cursor.style.backgroundColor = 'transparent';
+                    cursor.style.border = '1px solid var(--gold)';
+                });
+            });
+        }
+
+        window.onload = () => {
+            safeRender();
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    }
+                });
+            }, { threshold: 0.15, rootMargin: "0px 0px -50px 0px" });
+
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        };
+    </script>
+</body>
+
+</html>
